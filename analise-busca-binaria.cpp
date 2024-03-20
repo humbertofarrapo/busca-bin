@@ -61,71 +61,68 @@ void gerar_chave(std::vector<int>& V, int q) {
     }
 }
 
-// Função para executar os experimentos
-void executar_experimentos(std::vector<int>& V, int q) {
-    srand(time(NULL)); // inicializar semente para geração de números aleatórios
+// Função para executar uma busca e medir o tempo
+double executar_busca(std::vector<int>& V, int q, int tipo_busca) {
+    clock_t inicio, fim;
+    double tempo_total = 0;
 
-    double tempo_sequencial = 0, tempo_sequencial_otimizada = 0, tempo_binaria = 0;
-
-    // Realizar 10 execuções e calcular o tempo médio para cada tipo de busca
-    for (int k = 0; k < 10; k++) {
+    // Realizar 1000 execuções e calcular o tempo médio
+    for (int k = 0; k < 1000; k++) {
         // Gerar chaves aleatórias
         gerar_chave(V, q);
 
-        // Busca sequencial
-        clock_t inicio = clock();
-        for (int i = 0; i < q; i++) {
-            busca_sequencial(V, V[i]);
-        }
-        clock_t fim = clock();
-        tempo_sequencial += ((double) (fim - inicio)) / CLOCKS_PER_SEC;
-
-        // Busca sequencial otimizada
         inicio = clock();
         for (int i = 0; i < q; i++) {
-            busca_sequencial_otimizada(V, V[i]);
+            if (tipo_busca == 0) {
+                busca_sequencial(V, V[i]);
+            }
+            else if (tipo_busca == 1) {
+                busca_sequencial_otimizada(V, V[i]);
+            }
+            else {
+                busca_binaria(V, V[i]);
+            }
         }
         fim = clock();
-        tempo_sequencial_otimizada += ((double) (fim - inicio)) / CLOCKS_PER_SEC;
 
-        // Ordenar sequência para busca binária
-        std::sort(V.begin(), V.end());
-
-        // Busca binária
-        inicio = clock();
-        for (int i = 0; i < q; i++) {
-            busca_binaria(V, V[i]);
-        }
-        fim = clock();
-        tempo_binaria += ((double) (fim - inicio)) / CLOCKS_PER_SEC;
+        tempo_total += ((double) (fim - inicio)) / CLOCKS_PER_SEC;
     }
 
-    std::cout << "Tempo médio da busca sequencial: " << tempo_sequencial / 10 << " segundos\n";
-    std::cout << "Tempo médio da busca sequencial otimizada: " << tempo_sequencial_otimizada / 10 << " segundos\n";
-    std::cout << "Tempo médio da busca binária: " << tempo_binaria / 10 << " segundos\n";
+    return tempo_total / 1000;
 }
 
 int main() {
+    std::vector<int> sequencia;
+    std::vector<int> chaves;
+
     // Tamanho da sequência e número de consultas
     std::vector<int> tamanhos_sequencia = {10000, 100000, 1000000, 10000000};
     std::vector<int> num_consultas = {100, 1000, 10000, 100000};
 
-    // Executar experimentos para diferentes tamanhos e consultas
     for (int i = 0; i < tamanhos_sequencia.size(); i++) {
         for (int j = 0; j < num_consultas.size(); j++) {
             int n = tamanhos_sequencia[i];
             int q = num_consultas[j];
 
-            // Alocar memória para a sequência e as chaves
-            std::vector<int> sequencia;
-            std::vector<int> chaves;
-
             // Gerar sequência aleatória
             gerar_sequencia(sequencia, n);
 
-            // Executar experimentos e calcular a média do tempo de 10 execuções
+            // Busca sequencial
+            double tempo_medio_seq = executar_busca(sequencia, q, 0);
+
+            // Busca sequencial otimizada
+            double tempo_medio_seq_otim = executar_busca(sequencia, q, 1);
+
+            // Ordenar sequência para busca binária
+            std::sort(sequencia.begin(), sequencia.end());
+
+            // Busca binária
+            double tempo_medio_binaria = executar_busca(sequencia, q, 2);
+
             std::cout << "Experimentos para n = " << n << ", q = " << q << "\n";
-            executar_experimentos(sequencia, q);
+            std::cout << "Tempo médio da busca sequencial: " << tempo_medio_seq << " segundos\n";
+            std::cout << "Tempo médio da busca sequencial otimizada: " << tempo_medio_seq_otim << " segundos\n";
+            std::cout << "Tempo médio da busca binária: " << tempo_medio_binaria << " segundos\n";
         }
     }
 
